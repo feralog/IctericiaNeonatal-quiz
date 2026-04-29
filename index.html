@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Icterícia Neonatal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a1a1a; min-height: 100vh; }
+  header { background: #1e3a5f; color: white; padding: 20px 30px; text-align: center; }
+  header h1 { font-size: 22px; margin-bottom: 4px; }
+  header p { font-size: 13px; opacity: 0.8; }
+  .quiz-container { max-width: 800px; margin: 30px auto; padding: 0 16px 60px; }
+  #startScreen { background: white; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  #startScreen h2 { font-size: 20px; color: #1e3a5f; margin-bottom: 12px; }
+  #startScreen p { font-size: 14px; color: #555; margin-bottom: 24px; line-height: 1.6; }
+  .progress-bar-bg { background: #dde3ea; border-radius: 8px; height: 8px; margin-bottom: 8px; }
+  .progress-bar-fill { background: #2563eb; height: 8px; border-radius: 8px; transition: width 0.4s ease; }
+  .progress-label { font-size: 12px; color: #666; margin-bottom: 20px; }
+  .question-card { background: white; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px; }
+  .question-number { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #2563eb; letter-spacing: 1px; margin-bottom: 10px; }
+  .question-text { font-size: 15px; line-height: 1.65; color: #1a1a1a; margin-bottom: 22px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn { background: #f7f9fc; border: 2px solid #dde3ea; border-radius: 8px; padding: 12px 16px; text-align: left; font-size: 14px; cursor: pointer; transition: background 0.15s, border-color 0.15s; line-height: 1.5; }
+  .option-btn:hover:not(:disabled) { background: #e8f0fe; border-color: #2563eb; }
+  .option-btn.correct { background: #d1fae5; border-color: #16a34a; color: #166534; }
+  .option-btn.wrong { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+  .option-btn:disabled { cursor: default; }
+  .explanation { display: none; background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 0 8px 8px 0; padding: 14px 16px; margin-top: 14px; font-size: 13px; line-height: 1.6; color: #166534; }
+  .explanation.show { display: block; }
+  .btn-next { display: none; margin-top: 18px; background: #2563eb; color: white; border: none; border-radius: 8px; padding: 12px 28px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-next:hover { background: #1d4ed8; }
+  .btn-next.show { display: inline-block; }
+  .btn-primary { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 14px 36px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-primary:hover { background: #1d4ed8; }
+  #resultScreen { display: none; background: white; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .score-circle { width: 120px; height: 120px; border-radius: 50%; background: #1e3a5f; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .score-circle .score-num { font-size: 32px; font-weight: 700; }
+  .score-circle .score-denom { font-size: 13px; opacity: 0.8; }
+  #resultScreen h2 { font-size: 20px; color: #1e3a5f; margin-bottom: 10px; }
+  #resultScreen p { font-size: 14px; color: #555; margin-bottom: 24px; }
+  .stats-row { display: flex; justify-content: center; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
+  .stat-box { background: #f7f9fc; border-radius: 8px; padding: 12px 20px; text-align: center; min-width: 90px; }
+  .stat-box .stat-val { font-size: 22px; font-weight: 700; }
+  .stat-box .stat-lbl { font-size: 11px; color: #888; margin-top: 2px; }
+  .stat-box.green .stat-val { color: #16a34a; }
+  .stat-box.red .stat-val { color: #dc2626; }
+  .stat-box.blue .stat-val { color: #2563eb; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Icterícia Neonatal</h1>
+  <p>Pediatria — Neonatologia</p>
+</header>
+<div class="quiz-container">
+  <div id="startScreen">
+    <h2>Quiz de Revisão</h2>
+    <p>18 questões cobrindo icterícia fisiológica e patológica, incompatibilidade ABO e Rh, fototerapia, atresia biliar, colestase e kernicterus.<br><br>Responda cada questão e veja a explicação antes de avançar.</p>
+    <button class="btn-primary" onclick="startQuiz()">Começar Quiz</button>
+  </div>
+  <div id="quizArea" style="display:none;">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel">Questão 0 de 18</div>
+    <div class="question-card" id="questionCard">
+      <div class="question-number" id="questionNumber"></div>
+      <div class="question-text" id="questionText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation"></div>
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">Próxima questão →</button>
+    </div>
+  </div>
+  <div id="resultScreen">
+    <div class="score-circle">
+      <span class="score-num" id="scoreFinal">0</span>
+      <span class="score-denom" id="scoreDenom">de 18</span>
+    </div>
+    <h2 id="resultTitle"></h2>
+    <p id="resultMsg"></p>
+    <div class="stats-row">
+      <div class="stat-box green"><div class="stat-val" id="statCorrect">0</div><div class="stat-lbl">Acertos</div></div>
+      <div class="stat-box red"><div class="stat-val" id="statWrong">0</div><div class="stat-lbl">Erros</div></div>
+      <div class="stat-box blue"><div class="stat-val" id="statPct">0%</div><div class="stat-lbl">Aproveitamento</div></div>
+    </div>
+    <button class="btn-primary" onclick="restartQuiz()">Refazer Quiz</button>
+  </div>
+</div>
+<script>
+const rawQuestions = [
+  {
+    question: "Qual a prevalência da icterícia neonatal e por que ela é tão comum?",
+    options: [
+      "Ocorre em ~60% dos RN a termo e ~80% dos prematuros; é comum por alta produção de bilirrubina (hemólise fisiológica de hemácias fetais) associada à imaturidade hepática para conjugação",
+      "Ocorre em 10% dos RN, sendo mais frequente em prematuros com infecção bacteriana",
+      "Ocorre em 90% dos prematuros exclusivamente; é rara em RN a termo",
+      "Ocorre em 30% dos RN; principal causa é a deficiência de vitamina K ao nascimento",
+      "Ocorre em 50% dos RN prematuros apenas; RN a termo não apresentam icterícia fisiológica"
+    ],
+    correctIndex: 0,
+    explanation: "Icterícia neonatal: ~60% dos RN a termo e ~80% dos prematuros. Causas da hiperbilirrubinemia fisiológica: (1) alta produção (hemácias fetais têm vida útil menor + alta taxa de hemólise); (2) imaturidade da UDP-glucuronil-transferase hepática (conjugação deficiente); (3) circulação êntero-hepática aumentada."
+  },
+  {
+    question: "Qual a principal consequência neurológica da hiperbilirrubinemia indireta grave não tratada?",
+    options: [
+      "Kernicterus (encefalopatia bilirrubínica): bilirrubina não conjugada atravessa a barreira hematoencefálica e deposita-se nos núcleos da base e cerebelo, causando dano neurológico irreversível",
+      "Hidrocefalia por obstrução do aqueduto cerebral pela bilirrubina depositada",
+      "Convulsões neonatais por hipoglicemia associada à colestase hepática",
+      "Retinopatia da prematuridade por toxicidade da bilirrubina na retina",
+      "Surdez condutiva por acúmulo de bilirrubina na orelha média"
+    ],
+    correctIndex: 0,
+    explanation: "Kernicterus: bilirrubina indireta (não conjugada, lipossolúvel) atravessa a BHE e deposita-se nos núcleos da base (globus pallidus), cerebelo e tronco cerebral. Manifestações: hipotonia → hipertonia, opistótono, convulsões, surdez neurossensorial, paralisia cerebral coreoatetósica. É irreversível — prevenção é essencial."
+  },
+  {
+    question: "O que caracteriza a icterícia fisiológica do RN a termo?",
+    options: [
+      "Surge após 24h de vida, pico no 3º–4º dia (BT ~10–12 mg/dL), regride até o 7º–10º dia, sem hemólise",
+      "Surge nas primeiras 24h de vida com BT >12 mg/dL e requer tratamento imediato",
+      "Surge após 48h mas persiste por mais de 3 semanas sem causa aparente",
+      "Tem predomínio de bilirrubina direta (conjugada) acima de 2 mg/dL",
+      "Ocorre exclusivamente em prematuros e nunca em RN a termo"
+    ],
+    correctIndex: 0,
+    explanation: "Icterícia fisiológica: surge após 24h de vida (nunca antes); pico no 3º–4º dia (BT 10–12 mg/dL em RNT); regride até o 7º–10º dia. Predomínio de bilirrubina INDIRETA (não conjugada). Sem hemólise patológica. Icterícia patológica: surge <24h OU BT >12 mg/dL RNT (>15 prematuro) OU ritmo de subida >5 mg/dL/dia."
+  },
+  {
+    question: "Qual a principal característica que define icterícia patológica no RN?",
+    options: [
+      "Surgimento nas primeiras 24 horas de vida (antes de 24h) — sempre patológica independentemente do nível de bilirrubina",
+      "Bilirrubina total acima de 5 mg/dL em qualquer momento nas primeiras 48h",
+      "Qualquer icterícia visível no RN a termo nas primeiras 72h de vida",
+      "Icterícia com predomínio de bilirrubina indireta acima de 3 mg/dL",
+      "Icterícia que persiste além do 5º dia de vida"
+    ],
+    correctIndex: 0,
+    explanation: "Critérios de icterícia PATOLÓGICA: (1) surgimento <24h de vida; (2) ritmo de subida >5 mg/dL/dia; (3) BT >12 mg/dL em RNT ou >15 mg/dL em prematuro; (4) BD >2 mg/dL (colestase); (5) duração >2 semanas em RNT ou >3 semanas em prematuro. O surgimento nas primeiras 24h é o critério mais importante para hemólise."
+  },
+  {
+    question: "Qual a incompatibilidade sanguínea mais frequente causadora de hemólise neonatal?",
+    options: [
+      "Incompatibilidade ABO: mãe tipo O com RN tipo A ou B — anticorpos IgG anti-A e anti-B maternos atravessam a placenta",
+      "Incompatibilidade Rh: mãe Rh negativa com RN Rh positivo",
+      "Incompatibilidade Kell: mãe anti-Kell negativa com RN Kell positivo",
+      "Incompatibilidade Duffy: mãe anti-Duffy com RN positivo para antígeno Fy",
+      "Incompatibilidade Lewis: mãe Le(a-b-) com RN Le(a+b+)"
+    ],
+    correctIndex: 0,
+    explanation: "Incompatibilidade ABO é a mais FREQUENTE (mais comum que Rh). Mãe O tem anticorpos IgG anti-A e anti-B que atravessam a placenta. Pode ocorrer na primeira gestação. Geralmente mais leve que Rh. Teste de Coombs direto pode ser fracamente positivo. Incompatibilidade Rh é mais GRAVE (hidropisia fetal, anemia intensa)."
+  },
+  {
+    question: "Como funciona a fototerapia no tratamento da hiperbilirrubinemia neonatal?",
+    options: [
+      "A luz de espectro azul-verde (420–490 nm) converte a bilirrubina indireta em fotoisômeros hidrossolúveis que são excretados na bile e urina sem necessidade de conjugação hepática",
+      "A luz UV estimula a síntese de enzimas hepáticas que conjugam a bilirrubina mais rapidamente",
+      "A fototerapia destrói as hemácias com bilirrubina ligada à albumina, reduzindo a produção",
+      "A luz vermelha aquece o fígado, acelerando a captação e conjugação da bilirrubina",
+      "A fototerapia estimula a excreção renal direta de bilirrubina indireta via filtração glomerular"
+    ],
+    correctIndex: 0,
+    explanation: "Fototerapia: luz azul (420–490 nm) converte bilirrubina Z–Z (lipossolúvel, tóxica) em fotoisômeros (E-Z bilirrubina e lumirrubina) que são hidrossolúveis e excretados na bile e urina SEM necessidade de conjugação. Cobrir olhos (dano retiniano), aumentar hidratação (fezes verdes), monitorar temperatura."
+  },
+  {
+    question: "Qual é o nomograma utilizado para indicar fototerapia e exsanguinotransfusão na hiperbilirrubinemia neonatal?",
+    options: [
+      "Nomograma de Bhutani — estratifica o risco de hiperbilirrubinemia grave conforme a bilirrubina total e a hora de vida do RN",
+      "Nomograma de Ballard — avalia idade gestacional pelo exame físico",
+      "Nomograma de Fenton — classifica o crescimento intrauterino e pós-natal",
+      "Nomograma de Kramer — divide as zonas corporais para estimar bilirrubina clinicamente",
+      "Nomograma de Finnegan — avalia síndrome de abstinência neonatal"
+    ],
+    correctIndex: 0,
+    explanation: "Nomograma de Bhutani: gráfico de bilirrubina total sérica × hora de vida. Estratifica em 4 zonas de risco (baixo, baixo-intermediário, alto-intermediário, alto). Orienta indicação de fototerapia e exsanguinotransfusão conforme a idade gestacional e presença de fatores de risco. Padrão de referência pelas diretrizes da AAP."
+  },
+  {
+    question: "Criança de 35 dias com icterícia progressiva, fezes acólicas (esbranquiçadas) e urina colúrica desde a 2ª semana de vida. Qual o diagnóstico mais provável e a conduta urgente?",
+    options: [
+      "Atresia biliar extra-hepática — cirurgia de Kasai (hepatoportoenterostomia) deve ser realizada antes dos 30–60 dias de vida para melhor prognóstico",
+      "Hepatite neonatal idiopática — tratamento com ácido ursodesoxicólico por 3 meses",
+      "Cisto de colédoco — drenagem endoscópica eletiva",
+      "Icterícia por leite materno — suspender amamentação por 48h",
+      "Deficiência de alfa-1-antitripsina — transplante hepático após 6 meses"
+    ],
+    correctIndex: 0,
+    explanation: "Atresia biliar extra-hepática: obstrução fibrosa dos ductos biliares. Icterícia colestática persistente + fezes acólicas + urina colúrica. Cirurgia de Kasai (hepatoportoenterostomia): restabelece drenagem biliar. Prognóstico inversamente relacionado à idade cirúrgica: <30 dias = melhor; >90 dias = piora significativa. Transplante hepático se Kasai falhar."
+  },
+  {
+    question: "Qual o critério laboratorial que define colestase neonatal e deve sempre investigação?",
+    options: [
+      "Bilirrubina direta (BD) >1 mg/dL em RN com BT <5 mg/dL, OU BD >20% da BT quando BT ≥5 mg/dL — qualquer elevação de BD é patológica e exige investigação",
+      "Bilirrubina total >12 mg/dL em RN a termo com qualquer fração",
+      "Bilirrubina indireta >15 mg/dL em prematuros após a 2ª semana de vida",
+      "GGT acima de 50 U/L em qualquer RN na primeira semana de vida",
+      "Transaminases (AST e ALT) acima de 2x o valor normal para a faixa etária"
+    ],
+    correctIndex: 0,
+    explanation: "Colestase neonatal: BD >1 mg/dL quando BT <5 mg/dL, OU BD >20% da BT quando BT ≥5 mg/dL. SEMPRE patológica (bilirrubina direta nunca deve ser elevada significativamente no RN). Principais causas: atresia biliar, hepatite neonatal, deficiência de alfa-1-antitripsina, síndrome de Alagille. Investigar urgentemente: ecografia abdominal + cintilografia hepática."
+  },
+  {
+    question: "Qual o sinal de Kramer e como ele avalia a progressão da icterícia neonatal?",
+    options: [
+      "A icterícia progride de forma cefalocaudal: começa na face (zona 1) e avança para tronco, abdome, membros e palmas/plantas (zonas 1–5); permite estimativa clínica do nível de bilirrubina",
+      "A icterícia se inicia nas palmas e plantas e progride para o tronco e face",
+      "O sinal de Kramer avalia a presença de kernicterus pelo teste do reflexo da pupila",
+      "Avalia a intensidade da icterícia pela cor da urina e das fezes",
+      "É o teste de Coombs direto realizado no sangue do cordão umbilical"
+    ],
+    correctIndex: 0,
+    explanation: "Sinal de Kramer: a bilirrubina deposita-se cefalocaudalmente. Zona 1 (face) ≈ BT 4–8 mg/dL; Zona 2 (tronco até umbigo) ≈ 5–12; Zona 3 (abaixo umbigo) ≈ 8–16; Zona 4 (membros) ≈ 11–18; Zona 5 (palmas/plantas) ≈ >15. É uma ESTIMATIVA CLÍNICA — deve ser confirmada por bilirrubina sérica ou transcutânea."
+  },
+  {
+    question: "Qual a diferença fundamental entre incompatibilidade ABO e Rh quanto à ocorrência nas gestações?",
+    options: [
+      "ABO pode ocorrer na PRIMEIRA gestação (anticorpos IgG anti-A e anti-B pré-existentes na mãe O); Rh só ocorre na segunda gestação (sensibilização na 1ª gestação, resposta na 2ª)",
+      "Rh pode ocorrer na primeira gestação; ABO apenas a partir da segunda",
+      "Ambas podem ocorrer na primeira gestação com igual probabilidade",
+      "ABO não causa hemólise neonatal significativa; apenas Rh causa doença hemolítica grave",
+      "Rh ocorre em todas as gestações; ABO apenas se a mãe foi transfundida previamente"
+    ],
+    correctIndex: 0,
+    explanation: "ABO: mãe O tem anticorpos IgG anti-A e anti-B NATURALMENTE (não precisam de sensibilização prévia) → pode ocorrer na PRIMEIRA gestação. Rh: mãe Rh- é sensibilizada pelo sangue Rh+ do bebê na 1ª gestação → produz anti-D → na 2ª gestação o anti-D atravessa a placenta e hemolisa hemácias Rh+ fetais. Imunoglobulina Rh (anti-D) previne a sensibilização."
+  },
+  {
+    question: "Por que a fototerapia deve cobrir os olhos do RN?",
+    options: [
+      "A luz intensa de espectro azul pode causar dano à retina neonatal (retinopatia por fototoxicidade) — os olhos devem ser protegidos durante toda a fototerapia",
+      "Para evitar que o RN perca a capacidade de seguir objetos durante o tratamento",
+      "Para proteger contra a radiação UV, que causa catarata neonatal",
+      "Para manter o RN calmo e evitar que chore, otimizando a exposição corporal",
+      "Para prevenir conjuntivite química pelo espectro azul"
+    ],
+    correctIndex: 0,
+    explanation: "Fototerapia: cobrir olhos com máscara opaca para evitar fototoxicidade retiniana (a retina neonatal é mais suscetível). Outras precauções: monitorar temperatura (hipertermia/hipotermia), aumentar oferta hídrica (fezes amolecidas/diarreia), verificar posicionamento, monitorar bilirrubina a cada 4–6h nos casos graves."
+  },
+  {
+    question: "Qual a conduta inicial quando uma mãe Rh negativa tem RN Rh positivo com teste de Coombs direto negativo?",
+    options: [
+      "Administrar imunoglobulina Rh (anti-D) à mãe até 72h após o parto para prevenir sensibilização em gestações futuras",
+      "Realizar exsanguinotransfusão profilática no RN para prevenir hemólise tardia",
+      "Iniciar fototerapia profilática imediatamente, mesmo sem hiperbilirrubinemia",
+      "Nenhuma conduta específica; apenas monitorar bilirrubina nas primeiras 48h",
+      "Administrar imunoglobulina Rh ao RN para neutralizar hemácias Rh positivas"
+    ],
+    correctIndex: 0,
+    explanation: "Mãe Rh- + bebê Rh+ + Coombs direto negativo (sem sensibilização ainda): administrar imunoglobulina anti-D (Rhogam) à mãe até 72h após o parto (também após aborto, amniocentese, sangramento) para destruir hemácias Rh+ fetais antes de sensibilizar o sistema imune materno → previne doença hemolítica em gestações futuras."
+  },
+  {
+    question: "Quais são os fatores de risco para hiperbilirrubinemia grave que devem ser considerados na avaliação do RN ictérico?",
+    options: [
+      "Prematuridade, incompatibilidade sanguínea (ABO/Rh), deficiência de G6PD, icterícia nas primeiras 24h, irmão com icterícia que necessitou fototerapia, aleitamento materno exclusivo com perda de peso >10%",
+      "Apenas o nível de bilirrubina total acima de 15 mg/dL, sem outros fatores",
+      "Sexo masculino e gemelaridade, independentemente do nível de bilirrubina",
+      "Cesárea e indução do parto como únicos fatores de risco modificáveis",
+      "Apenas a deficiência de vitamina K e a prematuridade extrema"
+    ],
+    correctIndex: 0,
+    explanation: "Fatores de risco para hiperbilirrubinemia grave: prematuridade (<38 semanas), incompatibilidade ABO ou Rh, deficiência de G6PD, icterícia <24h, irmão que necessitou fototerapia, cefalohematoma/equimose, aleitamento exclusivo com perda de peso >10%, policitemia. Presença de fatores de risco altera o limiar para início de fototerapia."
+  },
+  {
+    question: "O que é a icterícia por leite materno e como ela difere da icterícia da amamentação?",
+    options: [
+      "Icterícia do leite materno: surge após 5–7 dias, pico 2ª semana, pode durar 3–12 semanas — causada por substâncias no leite que inibem a glucuroniltransferase. Icterícia da amamentação: surge 2–4 dias com perda de peso e desidratação por oferta insuficiente de leite",
+      "São o mesmo fenômeno — ambas devem ser tratadas com suspensão temporária do leite materno",
+      "Icterícia da amamentação surge após 2 semanas; icterícia por leite surge nas primeiras 24h",
+      "A icterícia por leite materno é sempre patológica e indica colestase hepática",
+      "Não há diferença clínica entre as duas formas; ambas requerem fototerapia imediata"
+    ],
+    correctIndex: 0,
+    explanation: "Icterícia da AMAMENTAÇÃO (early): 2–4 dias, por ingesta insuficiente → desidratação/perda de peso → circulação êntero-hepática aumentada. Trata com suporte à amamentação, maior frequência. Icterícia do LEITE MATERNO (late): surge 5–7 dias, pico 2ª semana, pode durar semanas — substâncias no leite inibem conjugação. Suspensão temporária (24–48h) confirma diagnóstico mas raramente necessária."
+  },
+  {
+    question: "Quando está indicada a exsanguinotransfusão (EST) na hiperbilirrubinemia neonatal?",
+    options: [
+      "Quando a fototerapia intensiva falha (BT continua subindo) OU em níveis de bilirrubina associados a risco elevado de kernicterus conforme o nomograma de Bhutani, idade gestacional e fatores de risco",
+      "Rotineiramente em toda incompatibilidade ABO independentemente do nível de bilirrubina",
+      "Quando a BT ultrapassa 15 mg/dL em qualquer RN a termo",
+      "Apenas em prematuros extremos com BT >10 mg/dL na 1ª semana de vida",
+      "Em todo caso de icterícia com teste de Coombs direto positivo"
+    ],
+    correctIndex: 0,
+    explanation: "EST (exsanguinotransfusão): indicada quando fototerapia intensiva falha OU quando o nível de BT atinge a zona de alto risco no nomograma de Bhutani conforme IG e fatores de risco. Remove bilirrubina circulante + hemácias revestidas de anticorpos + anticorpos maternos. Duplo volume (≈160 mL/kg). Complicações: infecção, trombocitopenia, hipocalcemia, enterocolite."
+  },
+  {
+    question: "Um RN de 3 dias, a termo, amamentado exclusivamente no seio, apresenta BT de 14 mg/dL com predomínio de bilirrubina indireta. Perda de peso de 12% desde o nascimento. Qual a conduta mais adequada?",
+    options: [
+      "Iniciar fototerapia + suplementação (fórmula ou leite materno ordenhado) para aumentar oferta calórica e hídrica + avaliar técnica de amamentação",
+      "Suspender amamentação por 72h e substituir por fórmula permanentemente",
+      "Alta hospitalar com orientação de expor ao sol e reavaliação em 5 dias",
+      "Exsanguinotransfusão imediata pois BT >12 mg/dL indica risco de kernicterus",
+      "Apenas monitorar sem qualquer intervenção, pois é icterícia fisiológica normal"
+    ],
+    correctIndex: 0,
+    explanation: "BT 14 mg/dL (acima da curva de fototerapia para RNT sem fatores de risco) + perda de peso 12% (>10% = significativa) = icterícia da amamentação com ingestão insuficiente. Conduta: fototerapia + suplementação (fórmula OU leite materno ordenhado) para aumentar oferta hídrica + orientar mãe sobre técnica de amamentação + pesagem diária. Não suspender definitivamente o aleitamento materno."
+  },
+  {
+    question: "Qual o papel do teste de Coombs direto (TAD) na investigação da icterícia neonatal?",
+    options: [
+      "Detecta anticorpos (IgG) maternos ligados à superfície das hemácias do RN — positivo confirma doença hemolítica imune (incompatibilidade ABO, Rh ou outros antígenos de grupo sanguíneo)",
+      "Mede o nível sérico de bilirrubina direta para confirmar colestase",
+      "Avalia a produção de anticorpos pelo próprio RN contra hemácias maternas",
+      "Quantifica a concentração de bilirrubina indireta ligada à albumina sérica",
+      "Detecta deficiência enzimática de G6PD nas hemácias do RN"
+    ],
+    correctIndex: 0,
+    explanation: "Teste de Coombs direto (TAD): detecta IgG maternos ligados às hemácias do RN. Positivo = doença hemolítica imune (incompatibilidade ABO, Rh, Kell, etc.). Na incompatibilidade ABO pode ser fracamente positivo. Negativo não exclui hemólise (Ex: G6PD, esferocitose, hemoglobinopatias). Também solicitar: tipagem sanguínea do RN e da mãe."
+  }
+];
+
+function shuffleQuestion(q) {
+  const correctText = q.options[q.correctIndex];
+  const shuffled = [...q.options];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return { ...q, options: shuffled, correctIndex: shuffled.indexOf(correctText) };
+}
+function prepareQuestions() {
+  const shuffledQs = [...rawQuestions];
+  for (let i = shuffledQs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledQs[i], shuffledQs[j]] = [shuffledQs[j], shuffledQs[i]];
+  }
+  return shuffledQs.map(shuffleQuestion);
+}
+let questions = [], currentIndex = 0, score = 0, answered = 0;
+function startQuiz() {
+  questions = prepareQuestions(); currentIndex = 0; score = 0; answered = 0;
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('resultScreen').style.display = 'none';
+  document.getElementById('quizArea').style.display = 'block';
+  renderQuestion();
+}
+function renderQuestion() {
+  const q = questions[currentIndex]; const total = questions.length;
+  document.getElementById('progressBar').style.width = ((currentIndex / total) * 100) + '%';
+  document.getElementById('progressLabel').textContent = `Questão ${currentIndex + 1} de ${total}`;
+  document.getElementById('questionNumber').textContent = `Questão ${currentIndex + 1}`;
+  document.getElementById('questionText').textContent = q.question;
+  const container = document.getElementById('optionsContainer'); container.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = opt;
+    btn.onclick = () => selectAnswer(i); container.appendChild(btn);
+  });
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('explanation').textContent = '';
+  document.getElementById('btnNext').classList.remove('show');
+}
+function selectAnswer(selectedIndex) {
+  const q = questions[currentIndex]; const buttons = document.querySelectorAll('.option-btn');
+  buttons.forEach(btn => btn.disabled = true);
+  if (selectedIndex === q.correctIndex) { buttons[selectedIndex].classList.add('correct'); score++; }
+  else { buttons[selectedIndex].classList.add('wrong'); buttons[q.correctIndex].classList.add('correct'); }
+  answered++;
+  const exp = document.getElementById('explanation'); exp.textContent = q.explanation; exp.classList.add('show');
+  const btnNext = document.getElementById('btnNext');
+  btnNext.textContent = currentIndex < questions.length - 1 ? 'Próxima questão →' : 'Ver resultado';
+  btnNext.classList.add('show');
+}
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex < questions.length) { renderQuestion(); } else { showResult(); }
+}
+function showResult() {
+  document.getElementById('quizArea').style.display = 'none';
+  document.getElementById('resultScreen').style.display = 'block';
+  const total = questions.length; const pct = Math.round((score / total) * 100);
+  document.getElementById('scoreFinal').textContent = score;
+  document.getElementById('scoreDenom').textContent = `de ${total}`;
+  document.getElementById('statCorrect').textContent = score;
+  document.getElementById('statWrong').textContent = total - score;
+  document.getElementById('statPct').textContent = pct + '%';
+  let title, msg;
+  if (pct >= 90) { title = 'Excelente!'; msg = 'Domínio completo do conteúdo. Você está preparado para a prova.'; }
+  else if (pct >= 70) { title = 'Muito bom!'; msg = 'Bom domínio geral. Revise os pontos onde errou antes da prova.'; }
+  else if (pct >= 50) { title = 'Razoável'; msg = 'Ainda há pontos a consolidar. Releia o relatório e refaça o quiz.'; }
+  else { title = 'Precisa revisar'; msg = 'Recomendo reler o relatório completo antes de tentar novamente.'; }
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMsg').textContent = msg;
+}
+function restartQuiz() { startQuiz(); }
+</script>
+</body>
+</html>
